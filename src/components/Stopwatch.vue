@@ -20,7 +20,7 @@ export default {
   name: "Stopwatch",
   data() {
     return {
-      time: 3599,
+      time: 0,
       isStart: false,
       timerId: null,
     };
