@@ -8,7 +8,7 @@
       <div @click="toggle">
         <img :src="require(`../assets/img/${action.play}.png`)" alt="play" />
       </div>
-      <div @click="reset" :disabled="!time">
+      <div @click="reset">
         <img :src="require(`../assets/img/${action.reset}.png`)" alt="reset" />
       </div>
     </div>
@@ -20,9 +20,9 @@ export default {
   name: "Stopwatch",
   data() {
     return {
-      time: 0,
+      startTime: null,
+      elapsedTime: 0,
       isStart: false,
-      timerId: null,
     };
   },
   computed: {
@@ -35,17 +35,18 @@ export default {
       };
     },
     formatTime() {
-      let hours = Math.floor(this.time / 3600);
-      let minutes = Math.floor((this.time - hours * 3600) / 60);
-      let seconds = this.time - hours * 3600 - minutes * 60;
+      let elapsed = Math.floor(this.elapsedTime / 1000);
+      let hours = Math.floor(elapsed / 3600);
+      let minutes = Math.floor((elapsed - hours * 3600) / 60);
+      let seconds = elapsed - hours * 3600 - minutes * 60;
       let timeFormat = "";
       if (hours > 0) {
         timeFormat += `${this.timeFor(hours)}:`;
-      }
-      if (minutes > 0) {
+      } if (minutes > 0) {
         timeFormat += `${this.timeFor(minutes)}:`;
+      } else {
+        timeFormat += `${this.timeFor(seconds)}`;
       }
-      timeFormat += `${this.timeFor(seconds)}`;
       return timeFormat;
     },
   },
@@ -60,28 +61,25 @@ export default {
         this.start();
       }
     },
+
     start() {
-      if (this.isStart) {
-        return;
-      }
+      if (this.isStart) return;
       this.isStart = true;
-      this.timerId = setInterval(() => {
-        this.time++;
-      }, 1000);
+      this.startTime = performance.now() - this.elapsedTime;
+      requestAnimationFrame(this.update);
     },
     pause() {
-      if (!this.isStart) {
-        return;
-      }
-      clearInterval(this.timerId);
+      if (!this.isStart) return;
       this.isStart = false;
     },
     reset() {
-      if (this.isStart) {
-        clearInterval(this.timerId);
-      }
-      this.time = 0;
       this.isStart = false;
+      this.elapsedTime = 0;
+    },
+    update(currentTime) {
+      if (!this.isStart) return;
+      this.elapsedTime = currentTime - this.startTime;
+      requestAnimationFrame(this.update);
     },
   },
 };
